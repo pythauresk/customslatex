@@ -1,0 +1,271 @@
+%Version LateX du package----------------------------------------
+%----------------------------------------------------------------
+
+\NeedsTeXFormat{LaTeX2e}[1999/01/01] %LateX2e avec MikteX 2.9
+\ProvidesPackage{touleboxe}[2022/11/11 Package Antoine Rodriguez v2.1.01]
+
+%11/11 ajouts de fonctions pour les algorithmes
+%16/10 ajout de macros pour faire des intervalles avec pstricks
+%03/10/2022 notes de màj : retrait des options thmfr et thmen inutiles et inadaptées
+% change en fonction des classes
+% changement de nom
+
+%---------------------------------------------------------
+%--------Déclaration des options du package---------------
+%---------------------------------------------------------
+	% déclaration et définition (à la fin) d'options de langue et 
+	%environnements "Théorème"
+
+%initialisation : \newif\if@option\@optionfalse où "option" est le nom de l'option
+\newif\if@beam\@beamfalse
+
+%déclaration des options
+\DeclareOption{beam}{\@beamtrue}
+
+%"Mise en service" des options------------------------------------------
+%-----------------------------------------------------------------------
+\ProcessOptions %obligatoire après la déclaration de toutes options
+%\ProcessUnusedOptions %décommenté si besoin (problemes d'options inutilisées)
+
+%---------------------------------------------------------
+%--------Récupération de la classe pour options-----------
+%---------------------------------------------------------
+% \@getclass
+
+
+% https://tex.stackexchange.com/questions/73/which-document-class-is-being-used
+% https://tex.stackexchange.com/questions/521661/how-can-i-use-if-then-else-with-ifclassloaded
+
+%---------------------------------------------------------
+%-------------------Packages requis-----------------------
+%---------------------------------------------------------
+
+%packages bibtex :
+\RequirePackage{natbib} %/!\avant babel
+	%permet avec "\bibliographystyle{plainnat-fr}" d'avoir des "et" à la place de "and"
+	%"\setcitestyle{numbers}" permet de mettre l'affichage "classique" avec des nombres entre crochets
+%Packages mathématiques :
+\RequirePackage{mathtools}
+\RequirePackage{mathrsfs}
+\RequirePackage{amsthm,amsmath,amsfonts,amssymb} %amsthm : environnement thm
+%\RequirePackage{envmath} fait merder \[ et \] pour quelles raisons ?
+\RequirePackage{algorithmic,algorithm} % pour écrire des algorithmes
+
+
+%packages écritures :
+\RequirePackage[cyr]{aeguill}
+\RequirePackage[T1]{fontenc}
+%\RequirePackage[utf8]{inputenc} % inutile avec xelatex
+
+%packages misc :
+\RequirePackage{verbatim} %environnement de code
+\RequirePackage{listings} % aussi pour du code 
+% https://texnique.fr/osqa/questions/8766/en-2020-quel-package-utiliser-pour-inserer-du-code-source-dans-un-document-latex
+\RequirePackage{setspace} %espaces interlignes https://faq.gutenberg.eu.org/3_composition/texte/paragraphes/modifier_l_interligne
+\RequirePackage{url} %url dans la bibliothèque
+\RequirePackage{xcolor} %autre gamme de couleur
+\RequirePackage{float} %permet de forcer les figures avec [H]
+\RequirePackage{xspace} %meilleur gestion des espaces
+\RequirePackage{bm}
+\RequirePackage{hyperref}
+\RequirePackage{graphicx} % pour inserer des figures
+\RequirePackage{subfigure} %package pour les sous figures %http://texdoc.net/texmf-dist/doc/latex/subfig/subfig.pdf
+\RequirePackage{subfiles} %intégrer un systeme de sous fichier 
+\RequirePackage{framed}% package pour faire des box
+\RequirePackage[shortlabels]{enumitem}% permet entre autre d'ajouter des puces au itemize
+\RequirePackage{dsfont}
+\RequirePackage{multicol} % gestion de plusieurs colonnes
+\RequirePackage{array,multirow,makecell} % gestion des tableaux
+\RequirePackage{xfp} % pour des calculs (dans les arguments par ex
+\RequirePackage{ifthen} % pour des boucles si alors else
+\RequirePackage{multienum} % colonnes d'enumerates
+\RequirePackage{dashundergaps} % faire des textes à trous
+
+%packages à configurer dans le document-------------------
+\if@beam\else \RequirePackage[explicit]{titlesec}\fi % /!\ INCOMPATIBLE BEAM
+        % https://www.overleaf.com/learn/latex/Sections_and_chapters 
+        %//Customize chapters and sections /!\mettre explicit simplifie 
+\RequirePackage{import} % package pour figures par exemple (\includefrom{}{}) % voir : http://blog.dorian-depriester.fr/latex/gestion-des-gros-documents-sous-latex
+
+%package de figure et tableaux mathématiques 
+%---TIKZ
+\RequirePackage{tkz-tab} %package tableau tikz  
+%---PSTRICKS
+\RequirePackage{pstricks}
+\RequirePackage{pstricks-add}
+\RequirePackage{pst-plot}
+\RequirePackage{fancyhdr} % mise en page fancies
+
+%---------------------------------------------------------
+%-------------Définition de commandes---------------------
+%---------------------------------------------------------
+
+%avec les commandes LateX de base----
+
+%-----------déclaration d'espace, opérateur, etc
+\newcommand\NN{\mathbb{N}}\newcommand\RR{\mathbb{R}}
+\newcommand\ZZ{\mathbb{Z}}\newcommand\CC{\mathbb{C}}
+\newcommand\DD{\mathbb{D}}
+\newcommand\PP{\mathds{P}} %polyômes / éléments finis 
+
+\newcommand\cont{\mathit{C}} %fonctions "continues" 
+
+\newcommand\dd{\mathrm{d}}  %d différentiel
+\newcommand\1{\mathds{1}} %indicatrice
+
+\newcommand\fou{\mathscr{F}} %transformée de Fourier %package : mathrsfs
+\newcommand\re{\mathrm{Re}} %partie réelle
+\newcommand\im{\mathrm{Im}} %partie imaginaire
+
+\newcommand\eps{\varepsilon} %un BEAUCOUP plus joli epsilon
+\DeclareMathOperator{\e}{e} %e de l'exponentielle
+\DeclareMathOperator{\sinc}{sinc} % sinus cardinal
+\DeclareMathOperator{\sgn}{sgn}%fonction signe
+
+\let\oldemptyset\emptyset % changement de l'ensemble vide
+\let\emptyset\varnothing
+
+\newcommand\°{^\circ} % doesn't work with pdflatex
+
+\newcommand{\vect}[1]{\overrightarrow{#1}}
+
+%-----------options de tableaux 
+% utilise array, multirow, makecell
+% permet de gérer la taille des cellules de cette manière {|C{1.5cm}|C{1cm}|C{1cm}}
+\setcellgapes{1pt}
+%\makegapedcells % pose problème avec m{}
+\newcolumntype{R}[1]{>{\raggedleft\arraybackslash}m{#1}} % serre à droite
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}m{#1}} % serre à gauche
+\newcolumntype{C}[1]{>{\centering\arraybackslash}m{#1}} % centre
+
+%-----------------macros
+
+%macro Alain Kessi pour les \hline plus épais
+\def\hlinewd#1{%
+\noalign{\ifnum0=`}\fi\hrule \@height #1 %
+\futurelet\reserved@a\@xhline}
+
+\newcommand{\lignesep}{
+    \begin{center}
+        \rule{0.5\linewidth}{1pt}
+    \end{center}
+}
+
+%-----------------opérateur de dérivation
+
+	%notice : pour utiliser \newcommand*\commande[n]{[...]} il faut exécuter dans le
+	% tex.  \commande{#1}{#2}...{#n} où #k sont les caractères voulus
+
+%avec les commandes de mathtools
+%-------------------encadrements
+\DeclarePairedDelimiter{\pth}{(}{)} 
+	%encadrement par des parenthèses 
+	%N.B. : \pth*{} adapte la taille au contenu (pareil pour les suivants)
+\DeclarePairedDelimiter{\cht}{[}{]} %encadrement par des crochets
+\DeclarePairedDelimiter\abs{|}{|}%valeurs absolues
+\DeclarePairedDelimiter\norm{\|}{\|}%normes
+\DeclarePairedDelimiter\sca{\langle}{\rangle}%crochet produit scalaire
+\DeclarePairedDelimiter\acco{\{}{\}}%accolades
+
+
+%-------------Commandes PSPICTURE-------------------------
+
+% ------- intervalles
+\newcommand{\crochetg}[1]{% definition crochet gauche
+\psline(\fpeval{#1-0.2},0.3)(#1,0.3)
+\psline(\fpeval{#1-0.2},-0.3)(#1,-0.3)
+\psline(#1,0.3)(#1,-0.3)}
+
+\newcommand{\crochetd}[1]{% definition crochet droit
+\psline(\fpeval{#1+0.2},0.3)(#1,0.3) 
+\psline(\fpeval{#1+0.2},-0.3)(#1,-0.3)
+\psline(#1,0.3)(#1,-0.3)}
+
+\newcommand{\psinterv}[4][red]{
+\psset{linecolor=#1} % couleur
+\psset{linewidth=2pt}
+\psline(#2,0)(#3,0) % ligne centrale de l'intervalle
+% conditions pour l'argument 4 (ouverture-fermeture de l'intervalle)
+\ifthenelse{\equal{#4}{ff}}{\crochetd{#2}\crochetg{#3}}{
+    \ifthenelse{\equal{#4}{of}}{\crochetg{#2}\crochetg{#3}}{
+        \ifthenelse{\equal{#4}{fo}}{\crochetd{#2}\crochetd{#3}}{
+            \ifthenelse{\equal{#4}{oo}}{\crochetg{#2}\crochetd{#3}}{
+}}}}}
+
+% ---- point sur une droite graduée
+\newcommand{\pspoint}[3][red]{% definition crochet droit
+\psset{linecolor=#1}
+\psset{linewidth=2pt}
+\psline(#2,0.3)(#2,-0.3)
+\uput[u](#2,0.3){\color{#1} \bf #3}
+}
+
+%-------------Commandes ALGORITHMIC-----------------------
+
+% cf. LateX pour prof de Maths
+\renewcommand{\algorithmicrequire}{\textbf{Entrée(s)}}
+\renewcommand{\algorithmicensure}{\textbf{Sortie(s)}}
+\renewcommand{\algorithmicwhile}{\textbf{tant que}}
+\renewcommand{\algorithmicdo}{\textbf{faire}}
+\renewcommand{\algorithmicendwhile}{\textbf{fin du tant que}}
+\renewcommand{\algorithmicend}{\textbf{fin}}
+\renewcommand{\algorithmicif}{\textbf{si}}
+\renewcommand{\algorithmicendif}{\textbf{fin du si}}
+\renewcommand{\algorithmicelse}{\textbf{sinon}}
+\renewcommand{\algorithmicelsif}{\textbf{fin du sinon}}
+\renewcommand{\algorithmicthen}{\textbf{alors}}
+\renewcommand{\algorithmicfor}{\textbf{pour}}
+\renewcommand{\algorithmicforall}{\textbf{pour tout}}
+\renewcommand{\algorithmicto}{\textbf{à}}
+\renewcommand{\algorithmicendfor}{\textbf{fin du pour}}
+\renewcommand{\algorithmicdo}{\textbf{faire}}
+\renewcommand{\algorithmicloop}{\textbf{boucler}}
+\renewcommand{\algorithmicendloop}{\textbf{fin de la boucle}}
+\renewcommand{\algorithmicrepeat}{\textbf{répéter}}
+\renewcommand{\algorithmicuntil}{\textbf{jusqu’à}}
+\renewcommand{\algorithmicprint}{\textbf{afficher}}
+
+%---------------------------------------------------------
+%-------Définition d'environnements personnalisés---------
+%---------------------------------------------------------
+
+% cadre
+\definecolor{gray085}{gray}{0.85}    
+
+\newenvironment{cadrecode}{
+\def\FrameCommand{{\color[HTML]{888888}\vrule width 0.1cm}\colorbox{gray085}}%
+\MakeFramed {\advance\hsize-\width \FrameRestore}}%
+{\endMakeFramed}
+
+% autre environnement itemize
+\newlist{bulletmize}{itemize}{3}
+\setlist[bulletmize]{label=$\bullet$}
+
+% environnement listing pour Python
+
+\lstset{%
+    language=Python,
+    basicstyle   = \ttfamily,
+    keywordstyle =    \color{magenta},
+    keywordstyle = [2]\color{orange},
+    commentstyle =    \color{gray}\itshape,
+    stringstyle  =    \color{cyan},
+    numbers      = left,
+    frame        = single,
+    framesep     = 2pt,
+    aboveskip    = 1ex
+}
+
+%---------------------------------------------------------
+%--------Définition des options du package----------------
+%---------------------------------------------------------
+
+%(!) définition des options intialisées au début
+
+\if@beam
+	\RequirePackage{transparent}
+\fi
+
+	%notes :
+	%restriction à # : _{|_#}
+\endinput
